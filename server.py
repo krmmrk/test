@@ -27,16 +27,17 @@ app.add_middleware(
 def init_db():
     # SQLiteデータベースに接続（ファイルが存在しない場合は新規作成）
     with sqlite3.connect("todos.db") as conn:
-        # TODOを保存するテーブルを作成（すでに存在する場合は作成しない）
+        # 収支を保存するテーブルを作成（すでに存在する場合は作成しない）
         # 自動増分する一意のID（INTEGER PRIMARY KEY AUTOINCREMENT）
-        # TODOのタイトル（TEXT NOT NULL）
+        # 収支の金額（TEXT NOT NULL）
         # 完了状態（BOOLEAN DEFAULT FALSE）
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS todos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
-                completed BOOLEAN DEFAULT FALSE
+                completed BOOLEAN DEFAULT FALSE,
+                income BOOLEAN DEFAULT FALSE
             )
         """
         )
@@ -48,9 +49,9 @@ init_db()
 
 # リクエストボディのデータ構造を定義するクラス
 class Todo(BaseModel):
-    title: str  # TODOのタイトル（必須）
+    title: str  # 収入のタイトル（必須）
     completed: Optional[bool] = False  # 完了状態（省略可能、デフォルトは未完了）
-
+    income: Optional[bool] = False
 
 # レスポンスのデータ構造を定義するクラス（TodoクラスにIDを追加）
 class TodoResponse(Todo):

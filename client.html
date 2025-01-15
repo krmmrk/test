@@ -3,39 +3,187 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- ビューポートの設定：モバイルデバイスでの表示を最適化 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シンプルTODO</title>
+    <title>かんたん家計簿</title>
     <style>
-        /* フォームの上下に余白を追加 */
-        .todo-form {
-            margin: 1rem 0;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        /* 完了したTODOのスタイル：取り消し線と薄い色 */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        h2 {
+            color: #34495e;
+            margin: 20px 0;
+            padding-left: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .todo-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        ul {
+            list-style: none;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
         .completed {
             text-decoration: line-through;
-            color: gray;
+            color: #95a5a6;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        li button {
+            margin-left: auto;
+            padding: 5px 10px;
+            background-color: #e74c3c;
+        }
+
+        li button:hover {
+            background-color: #c0392b;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* レスポンシブデザイン */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            input[type="text"] {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            select {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
-<body>
-    <h1>TODOリスト</h1>
-
-    <!-- TODOを追加するためのフォーム -->
+<body> <h1>家計簿</h1>
+    <!-- 収支を追加するためのフォーム -->
     <form id="todoForm" class="todo-form">
-        <input type="text" id="todoInput" placeholder="新しいTODOを入力..." required>
+        <input type="text" id="todoInput" placeholder="収入・支出を入力..." required>
+        <select name="" id="name">
+            <option value="収入">収入</option>
+            <option value="支出">支出</option>
+        </select>
         <button type="submit">追加</button>
     </form>
-
-    <!-- TODOリストを表示する場所 -->
-    <ul id="todoList"></ul>
-
+    
+    <h2>収入</h2>
+    
+    <!-- 収入を表示する場所 -->
+    <ul id="income"></ul>
+    
+    <h2>支出</h2>
+    
+    <!-- 支出を表示する場所 -->
+    <ul id="expenditure"></ul>
+    
+    <h2>収支</h2>
+    
+    <script>
+        function subtractNumbers() {
+          var num1 = parseFloat(document.getElementById('num1').value);
+          var num2 = parseFloat(document.getElementById('num2').value);
+          var difference = num1 - num2;
+          document.getElementById('result').innerHTML = '結果: ' + difference;
+        }
+    </script>
+    
+    <input type="text" id="num1" placeholder="数字を入力">
+    <input type="text" id="num2" placeholder="数字を入力">
+    <button onclick="subtractNumbers()">計算</button>
+    <p id="result"></p>
+    
     <script>
         // APIサーバーのベースURL
         const API_URL = '/todos';
-
+    
         /**
          * APIとの通信を行う汎用関数
          * @param {string} endpoint - APIのエンドポイント
@@ -52,7 +200,7 @@
                 console.error(error);
             }
         }
-
+    
         /**
          * 1つのTODOアイテムのHTMLを生成
          * @param {Object} todo - TODOオブジェクト（id, title, completedを含む）
@@ -69,7 +217,7 @@
                 </li>
             `;
         }
-
+    
         /**
          * すべてのTODOを読み込んでページに表示
          */
@@ -78,11 +226,14 @@
             const todos = await api(API_URL);
             if (todos) {
                 // 取得したTODOをHTMLに変換して表示
-                document.getElementById('todoList').innerHTML =
+                document.getElementById('income').innerHTML =
+                    todos.map(renderTodo).join('');
+    
+                    document.getElementById('expenditure').innerHTML =
                     todos.map(renderTodo).join('');
             }
         }
-
+    
         /**
          * 新しいTODOを追加
          * @param {string} title - 新しいTODOのタイトル
@@ -97,7 +248,7 @@
             // リストを再読み込みして表示を更新
             loadTodos();
         }
-
+    
         /**
          * TODOの完了状態を切り替え
          * @param {number} id - TODOのID
@@ -117,7 +268,7 @@
                 loadTodos();
             }
         }
-
+    
         /**
          * TODOを削除
          * @param {number} id - 削除するTODOのID
@@ -128,12 +279,12 @@
             // リストを再読み込みして表示を更新
             loadTodos();
         }
-
+    
         // ページ読み込み完了時の処理
         document.addEventListener('DOMContentLoaded', () => {
             // 初期表示としてTODOリストを読み込む
             loadTodos();
-
+    
             // フォームの送信イベントを処理
             document.getElementById('todoForm').addEventListener('submit', e => {
                 // フォームのデフォルトの送信動作を防止
@@ -150,6 +301,7 @@
             });
         });
     </script>
-</body>
+    
+    </body>
 
-</html>
+<!-- 以下、bodyの内容は同じ -->
